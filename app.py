@@ -1,12 +1,15 @@
 from domain import WeatherState, ApiError, WeatherApi
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Union
 
+from notifications import send_notification
+
 
 def create_app(weather_api: WeatherApi):
     app = FastAPI()
+    clients = []
 
     class SuccessResponse(BaseModel):
         success: bool
@@ -46,5 +49,22 @@ def create_app(weather_api: WeatherApi):
                     "error": msg
                 }
             )
+
+    @app.websocket("/ws/notify")
+    async def websocket_endpoint(websocket: WebSocket):
+        await websocket.accept()
+        clients.append(websocket)
+        print('client attached')
+        try:
+            while True:
+                await websocket.receive_text()
+        except:
+            clients.remove(websocket)
+
+    @app.post('/notification-test')
+    async def notification_test():
+        print('clients: ' + str(len(clients)))
+        for client in clients:
+            await send_notification(client, "TEST NOTIFICATION")
 
     return app
