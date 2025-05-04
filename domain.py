@@ -2,8 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Optional, Union
 
-
 # Entities
+
 
 class WeatherState:
 
@@ -14,7 +14,7 @@ class WeatherState:
         temperature: float,
         feels_like: float,
         pressure: int,
-        humidity: int
+        humidity: int,
     ):
         self.time = time
         self.city = city
@@ -31,6 +31,7 @@ class ApiError:
 
 
 # Services
+
 
 class WeatherRepository(ABC):
 
