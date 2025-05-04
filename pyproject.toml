@@ -14,4 +14,10 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.dependencies]
 fastapi = {extras = ["standard"], version = "^0.115.12"}
 requests = "^2.32.3"
+python-dotenv = "^1.1.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
 flake8 = "^7.2.0"
+bandit = "^1.8.3"
+isort = "^6.0.1"
