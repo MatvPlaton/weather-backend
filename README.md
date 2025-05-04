@@ -23,7 +23,9 @@ This is the **backend** of the Weather Monitoring App. It provides such API:
     poetry install
     ```
 
-2. Start the app:
+2. Create `.env` file and put your API token
+
+3. Start the app:
 
     ```bash
     poetry run fastapi dev main.py
@@ -32,7 +34,7 @@ This is the **backend** of the Weather Monitoring App. It provides such API:
 ### 🐳 Run with Docker
 
 ```bash
-docker run -d --name weather-backend -p 8080:8080 ebob/weather-backend:latest
+docker run -d --name weather-backend -p 8080:8080 --env OPEN_WEATHER_MAP_TOKEN="your_actual_token" ebob/weather-backend:latest
 ```
 
 Then open `http://localhost:8080/docs` in your browser.
