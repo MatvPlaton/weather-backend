@@ -1,9 +1,10 @@
-from typing import Union, List, Annotated
+from typing import Union, List
 
-from fastapi import FastAPI, WebSocket, Header
+from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import requests
+import uuid
 
 from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
     UserRepository, UserLoginRepository
@@ -34,6 +35,10 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
     class HistoryResponse(BaseModel):
         success: bool
         history: List[WeatherEntity]
+
+    class UserResponse(BaseModel):
+        success: bool
+        telegram_id: int
 
     class EmptyResponse(BaseModel):
         success: bool
@@ -151,8 +156,9 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
             500: error_response,
         },
     )
-    def user_successful_login(token: str, telegram_id: int, authorization_token: str):
-        if authorization != telegram_service_authorization_token:
+    def user_successful_login(token: str, telegram_id: int,
+                              authorization_token: str):
+        if authorization_token != telegram_service_authorization_token:
             return JSONResponse(
                 status_code=403,
                 content={
@@ -180,12 +186,25 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                 }
             )
 
+        authorization_token = str(uuid.uuid4())
+        try:
+            user_repository.save_user(telegram_id, authorization_token)
+        except Exception as e:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False,
+                    "error": f"Bad response from UserRepository: {e}"
+                }
+            )
+
         try:
             requests.get(
                 callback_url,
                 params={
                     "token": token,
                     "telegram_id": telegram_id,
+                    "authorization_token": authorization_token
                 }
             )
         except Exception as e:
@@ -200,6 +219,40 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
         return {
             "success": True
         }
+
+    @app.get(
+        "/user/telegram_id",
+        response_model=UserResponse,
+        responses={
+            404: not_found_response,
+            500: error_response,
+        },
+    )
+    def user_telegram_id(authorization_token: str):
+        try:
+            user = user_repository.get_user(authorization_token)
+        except Exception as e:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False,
+                    "error": f"Bad response from UserRepository: {e}"
+                }
+            )
+
+        if user is not None:
+            return {
+                "success": True,
+                "telegram_id": user.telegram_id
+            }
+
+        return JSONResponse(
+            status_code=404,
+            content={
+                "success": False,
+                "error": f"Authorization token {authorization_token} not found"
+            }
+        )
 
     # Notifications
 
