@@ -3,7 +3,7 @@ from datetime import datetime
 from threading import RLock
 from typing import Optional, List
 
-from domain import WeatherRepository, WeatherState
+from domain import WeatherRepository, WeatherState, User, UserRepository
 
 
 class SqliteWeatherRepository(WeatherRepository):
@@ -50,7 +50,7 @@ class SqliteWeatherRepository(WeatherRepository):
                 )
 
             return None
-    
+
     def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
         with self.lock:
             result = self.cursor.execute(
@@ -63,7 +63,6 @@ class SqliteWeatherRepository(WeatherRepository):
                 """,
                 (city, limit),
             )
-
 
             states = []
             for row in result:
@@ -96,5 +95,54 @@ class SqliteWeatherRepository(WeatherRepository):
                     weather_state.pressure,
                     weather_state.humidity,
                 ),
+            )
+            self.connection.commit()
+
+
+class SqliteUserRepository(UserRepository):
+
+    def __init__(self, file_name: str):
+        self.lock = RLock()
+
+        self.connection = sqlite3.connect(file_name, check_same_thread=False)
+        self.cursor = self.connection.cursor()
+        self.cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users(
+                telegram_id INTEGER,
+                token TEXT UNIQUE,
+                PRIMARY KEY (telegram_id)
+            )
+        """
+        )
+        self.connection.commit()
+
+    def get_user(self, token: str) -> Optional[User]:
+        with self.lock:
+            result = self.cursor.execute(
+                """
+                    SELECT telegram_id
+                    FROM user
+                    WHERE token = ?
+                """,
+                (token),
+            ).fetchone()
+
+            if result is not None:
+                return User(
+                    result["telegram_id"],
+                    token,
+                )
+
+            return None
+
+    def save_user(self, telegram_id: int, token: str):
+        with self.lock:
+            self.cursor.execute(
+                """
+                    INSERT OR REPLACE INTO users(telegram_id, token)
+                    VALUES(?, ?)
+                """,
+                (telegram_id, token),
             )
             self.connection.commit()

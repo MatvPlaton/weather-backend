@@ -30,6 +30,16 @@ class ApiError:
         self.message = message
 
 
+class User:
+
+    def __init__(
+        self,
+        telegram_id: int,
+        token: str
+    ):
+        self.telegram_id = telegram_id
+        self.token = token
+
 # Services
 
 
@@ -52,4 +62,26 @@ class WeatherApi(ABC):
 
     @abstractmethod
     def get_weather(self, city: str) -> Union[WeatherState, ApiError]:
+        pass
+
+
+class UserRepository(ABC):
+
+    @abstractmethod
+    def get_user(self, token: str) -> Optional[User]:
+        pass
+
+    @abstractmethod
+    def save_user(self, telegram_id: int, token: str):
+        pass
+
+
+class UserLoginRepository(ABC):
+
+    @abstractmethod
+    def add_user_login(self, token: str, callback_url: str):
+        pass
+
+    @abstractmethod
+    def delete_user_login(self, token: str) -> bool:
         pass

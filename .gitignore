@@ -1,4 +1,6 @@
 database.db
+weather.db
+users.db
 __pycache__/*
 .idea/*
 .env
