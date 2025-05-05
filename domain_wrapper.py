@@ -1,6 +1,7 @@
-from domain import WeatherState, ApiError, WeatherRepository, WeatherApi
 from datetime import datetime
 from typing import Union
+
+from domain import ApiError, WeatherApi, WeatherRepository, WeatherState
 
 
 class WeatherApiWithRepository(WeatherApi):

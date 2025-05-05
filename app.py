@@ -1,8 +1,10 @@
-from domain import WeatherState, ApiError, WeatherApi
+from typing import Union
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Union
+
+from domain import ApiError, WeatherApi, WeatherState
 
 
 def create_app(weather_api: WeatherApi):

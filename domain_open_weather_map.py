@@ -1,7 +1,9 @@
-from domain import WeatherState, ApiError, WeatherApi
 from datetime import datetime
 from typing import Tuple, Union
+
 import requests
+
+from domain import ApiError, WeatherApi, WeatherState
 
 
 class OpenWeatherMapApi(WeatherApi):

@@ -8,13 +8,13 @@ from typing import Optional, Union
 class WeatherState:
 
     def __init__(
-        self,
-        time: datetime,
-        city: str,
-        temperature: float,
-        feels_like: float,
-        pressure: int,
-        humidity: int
+            self,
+            time: datetime,
+            city: str,
+            temperature: float,
+            feels_like: float,
+            pressure: int,
+            humidity: int
     ):
         self.time = time
         self.city = city

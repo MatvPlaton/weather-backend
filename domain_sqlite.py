@@ -1,8 +1,9 @@
-from domain import WeatherState, WeatherRepository
-from datetime import datetime
-from typing import Optional
-from threading import RLock
 import sqlite3
+from datetime import datetime
+from threading import RLock
+from typing import Optional
+
+from domain import WeatherRepository, WeatherState
 
 
 class SqliteWeatherRepository(WeatherRepository):
