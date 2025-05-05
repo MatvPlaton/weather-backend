@@ -5,8 +5,9 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import create_app
-from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
-    UserRepository, UserLoginRepository
+from domain import (ApiError, WeatherApi,
+                    WeatherRepository, WeatherState)
+
 
 @pytest.fixture
 def mock_weather_api_success():
@@ -30,7 +31,7 @@ def mock_weather_api_error():
 
 
 def test_get_weather_success(mock_weather_api_success):
-    app = create_app(mock_weather_api_success,None,None,None,"")
+    app = create_app(mock_weather_api_success, None, None, None, "")
     client = TestClient(app)
 
     response = client.get("/weather/London")
@@ -45,7 +46,7 @@ def test_get_weather_success(mock_weather_api_success):
 
 
 def test_get_weather_error(mock_weather_api_error):
-    app = create_app(mock_weather_api_error,None,None,None,"")
+    app = create_app(mock_weather_api_error, None, None, None, "")
     client = TestClient(app)
 
     response = client.get("/weather/London")
@@ -64,7 +65,7 @@ def mock_weather_api_invalid():
 
 
 def test_get_weather_invalid_response(mock_weather_api_invalid):
-    app = create_app(mock_weather_api_invalid,None,None,None,"")
+    app = create_app(mock_weather_api_invalid, None, None, None, "")
     client = TestClient(app)
 
     response = client.get("/weather/London")
@@ -73,3 +74,47 @@ def test_get_weather_invalid_response(mock_weather_api_invalid):
     data = response.json()
     assert data["success"] is False
     assert "Bad response from WeatherAPI" in data["error"]
+
+
+@pytest.fixture
+def mock_weather_repository():
+    mock = MagicMock(spec=WeatherRepository)
+    return mock
+
+
+def test_get_weather_history_success(mock_weather_repository):
+    mock_weather_repository.get_weather_history.return_value = [
+        WeatherState(
+            time=datetime(2024, 1, 1),
+            city="London",
+            temperature=10.0,
+            feels_like=9.0,
+            pressure=1020,
+            humidity=70
+        )
+    ]
+    app = create_app(None, mock_weather_repository, None, None, "")
+    client = TestClient(app)
+    response = client.get("/weather/history/London", params={"limit": 1})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert len(data["history"]) == 1
+    assert data["history"][0]["temperature"] == 10.0
+    assert data["history"][0]["feels_like"] == 9.0
+    assert data["history"][0]["pressure"] == 1020
+    assert data["history"][0]["humidity"] == 70
+
+
+def test_get_weather_history_failure(mock_weather_repository):
+    mock_weather_repository.get_weather_history.side_effect = \
+        Exception("Database error")
+    app = create_app(None, mock_weather_repository, None, None, "")
+    client = TestClient(app)
+    response = client.get("/weather/history/London", params={"limit": 1})
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["success"] is False
+    assert "Bad response from WeatherRepository: Database error" \
+           in data["error"]
