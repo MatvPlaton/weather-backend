@@ -1,20 +1,20 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Optional, Union
-
+from typing import Optional, Union, List
 
 # Entities
+
 
 class WeatherState:
 
     def __init__(
-            self,
-            time: datetime,
-            city: str,
-            temperature: float,
-            feels_like: float,
-            pressure: int,
-            humidity: int
+        self,
+        time: datetime,
+        city: str,
+        temperature: float,
+        feels_like: float,
+        pressure: int,
+        humidity: int,
     ):
         self.time = time
         self.city = city
@@ -30,12 +30,27 @@ class ApiError:
         self.message = message
 
 
+class User:
+
+    def __init__(
+        self,
+        telegram_id: int,
+        token: str
+    ):
+        self.telegram_id = telegram_id
+        self.token = token
+
 # Services
+
 
 class WeatherRepository(ABC):
 
     @abstractmethod
     def get_weather(self, time: datetime, city: str) -> Optional[WeatherState]:
+        pass
+
+    @abstractmethod
+    def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
         pass
 
     @abstractmethod
@@ -47,4 +62,26 @@ class WeatherApi(ABC):
 
     @abstractmethod
     def get_weather(self, city: str) -> Union[WeatherState, ApiError]:
+        pass
+
+
+class UserRepository(ABC):
+
+    @abstractmethod
+    def get_user(self, token: str) -> Optional[User]:
+        pass
+
+    @abstractmethod
+    def save_user(self, telegram_id: int, token: str):
+        pass
+
+
+class UserLoginRepository(ABC):
+
+    @abstractmethod
+    def add_user_login(self, token: str, callback_url: str):
+        pass
+
+    @abstractmethod
+    def delete_user_login(self, token: str) -> bool:
         pass

@@ -22,13 +22,12 @@ class OpenWeatherMapApi(WeatherApi):
                     "lat": lat_lon[0],
                     "lon": lat_lon[1],
                     "appid": self.token,
-                    "units": "metric"
-                }
+                    "units": "metric",
+                },
             )
         except requests.exceptions.RequestException as e:
             return ApiError(str(e))
 
-        print('>>', response.json())
         data = response.json()["main"]
         return WeatherState(
             datetime.now(),
@@ -36,7 +35,7 @@ class OpenWeatherMapApi(WeatherApi):
             data["temp"],
             data["feels_like"],
             data["pressure"],
-            data["humidity"]
+            data["humidity"],
         )
 
     def __get_lat_lon(self, city: str) -> Tuple[int, int]:
@@ -47,11 +46,7 @@ class OpenWeatherMapApi(WeatherApi):
         try:
             response = requests.get(
                 "http://api.openweathermap.org/geo/1.0/direct",
-                params={
-                    "q": city,
-                    "limit": 1,
-                    "appid": self.token
-                }
+                params={"q": city, "limit": 1, "appid": self.token},
             )
         except requests.exceptions.RequestException as e:
             return ApiError(str(e))

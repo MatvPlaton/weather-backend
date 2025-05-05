@@ -29,15 +29,15 @@ class CachedWeatherApi(WeatherApi):
 
         cached = self.cache.get(city)
         if cached is not None:
-            expire_time = cached['expire_time']
+            expire_time = cached["expire_time"]
             if current_time <= expire_time:
-                return cached['entity']
+                return cached["entity"]
 
         weather = self.wrapped.get_weather(city)
         if isinstance(weather, WeatherState):
             self.cache[city] = {
-                'expire_time': current_time + self.cache_seconds,
-                'entity': weather
+                "expire_time": current_time + self.cache_seconds,
+                "entity": weather,
             }
 
         return weather

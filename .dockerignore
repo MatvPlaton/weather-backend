@@ -1,0 +1,14 @@
+.git
+.gitignore
+.DS_Store
+.idea
+README.md
+Dockerfile
+docker-compose.yml
+.env
+.env.example
+database.db
+__pycache__
+*.pyc
+*.pyo
+*.pyd
