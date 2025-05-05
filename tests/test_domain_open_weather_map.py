@@ -5,8 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import create_app
-from domain import ApiError, WeatherApi, WeatherState
-
+from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
+    UserRepository, UserLoginRepository
 
 @pytest.fixture
 def mock_weather_api_success():
@@ -30,7 +30,7 @@ def mock_weather_api_error():
 
 
 def test_get_weather_success(mock_weather_api_success):
-    app = create_app(mock_weather_api_success)
+    app = create_app(mock_weather_api_success,None,None,None,"")
     client = TestClient(app)
 
     response = client.get("/weather/London")
@@ -45,7 +45,7 @@ def test_get_weather_success(mock_weather_api_success):
 
 
 def test_get_weather_error(mock_weather_api_error):
-    app = create_app(mock_weather_api_error)
+    app = create_app(mock_weather_api_error,None,None,None,"")
     client = TestClient(app)
 
     response = client.get("/weather/London")
@@ -64,7 +64,7 @@ def mock_weather_api_invalid():
 
 
 def test_get_weather_invalid_response(mock_weather_api_invalid):
-    app = create_app(mock_weather_api_invalid)
+    app = create_app(mock_weather_api_invalid,None,None,None,"")
     client = TestClient(app)
 
     response = client.get("/weather/London")
