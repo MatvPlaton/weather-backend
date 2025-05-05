@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 from threading import RLock
-from typing import Optional
+from typing import Optional, List
 
 from domain import WeatherRepository, WeatherState
 
@@ -50,6 +50,35 @@ class SqliteWeatherRepository(WeatherRepository):
                 )
 
             return None
+    
+    def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
+        with self.lock:
+            result = self.cursor.execute(
+                """
+                    SELECT time, temperature, feels_like, pressure, humidity
+                    FROM weather
+                    WHERE city = ?
+                    ORDER BY time DESC
+                    LIMIT ?
+                """,
+                (city, limit),
+            )
+
+
+            states = []
+            for row in result:
+                states.append(
+                    WeatherState(
+                        datetime.fromtimestamp(row[0] / 1000),
+                        city,
+                        row[1],
+                        row[2],
+                        row[3],
+                        row[4],
+                    )
+                )
+
+            return states
 
     def save_weather(self, weather_state: WeatherState):
         with self.lock:

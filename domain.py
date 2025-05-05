@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 # Entities
 
@@ -37,6 +37,10 @@ class WeatherRepository(ABC):
 
     @abstractmethod
     def get_weather(self, time: datetime, city: str) -> Optional[WeatherState]:
+        pass
+
+    @abstractmethod
+    def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
         pass
 
     @abstractmethod

@@ -28,7 +28,6 @@ class OpenWeatherMapApi(WeatherApi):
         except requests.exceptions.RequestException as e:
             return ApiError(str(e))
 
-        print(">>", response.json())
         data = response.json()["main"]
         return WeatherState(
             datetime.now(),
