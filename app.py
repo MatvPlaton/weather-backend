@@ -72,7 +72,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                     "error": f"Bad response from UserRepository: {e}"
                 }
             )
-        
+
         if user is None:
             return JSONResponse(
                 status_code=403,
@@ -249,7 +249,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
             500: error_response,
         },
     )
-    def user_telegram_id(authorization_token: str):
+    def user_telegram_id(user_token: str):
         user = find_user(user_token)
         if isinstance(user, JSONResponse):
             return user
