@@ -187,6 +187,7 @@ def add_get_weather_history_route(
 
         try:
             history = weather_repository.get_weather_history(
+                limit,
                 city if city is not None and len(city) > 0 else user
             )
             entities = list(
