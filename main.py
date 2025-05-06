@@ -10,7 +10,9 @@ from domain_wrapper import CachedWeatherApi, WeatherApiWithRepository
 
 load_dotenv()
 open_weather_map_token = os.getenv("OPEN_WEATHER_MAP_TOKEN")
-telegram_service_authorization_token = os.getenv("TELEGRAM_SERVICE_AUTHORIZATION_TOKEN")
+telegram_service_authorization_token = os.getenv(
+    "TELEGRAM_SERVICE_AUTHORIZATION_TOKEN"
+)
 
 weather_repository = SqliteWeatherRepository("weather.db")
 
