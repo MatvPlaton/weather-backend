@@ -124,7 +124,7 @@ class SqliteUserRepository(UserRepository):
 
             if result is not None:
                 return User(
-                    result["telegram_id"],
+                    result[0],
                     token,
                 )
 
