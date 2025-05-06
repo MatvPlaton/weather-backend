@@ -15,6 +15,8 @@ class OpenWeatherMapApi(WeatherApi):
     def get_weather(self, city: str, user: User) -> \
             Union[WeatherState, ApiError]:
         lat_lon = self.__get_lat_lon(city)
+        if isinstance(lat_lon, ApiError):
+            return lat_lon
 
         try:
             response = requests.get(

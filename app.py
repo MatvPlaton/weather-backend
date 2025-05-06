@@ -9,6 +9,7 @@ from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
     UserRepository, UserLoginRepository, User
 
 
+# flake8: noqa: C901
 def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                user_repository: UserRepository,
                user_login_repository: UserLoginRepository,
