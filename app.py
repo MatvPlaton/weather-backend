@@ -1,9 +1,8 @@
 from typing import Union, List
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import requests
 import uuid
 
 from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
@@ -15,7 +14,6 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                user_login_repository: UserLoginRepository,
                telegram_service_authorization_token: str):
     app = FastAPI()
-    clients = []
 
     class WeatherResponse(BaseModel):
         success: bool
@@ -204,7 +202,9 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
 
         response = {
             "success": True,
-            "callback_url": f"{callback_url}?token={token}&telegram_id={telegram_id}&authorization_token={authorization_token}",
+            "callback_url": f"{callback_url}?token={token}&telegram_id=" +
+                            f"{telegram_id}&authorization_token=" +
+                            f"{authorization_token}",
         }
         print(response)
 
