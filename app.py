@@ -8,7 +8,6 @@ import uuid
 
 from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
     UserRepository, UserLoginRepository
-from notifications import send_notification
 
 
 def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
@@ -39,6 +38,10 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
     class UserResponse(BaseModel):
         success: bool
         telegram_id: int
+
+    class SuccessfulLoginResponse(BaseModel):
+        success: bool
+        callback_url: str
 
     class EmptyResponse(BaseModel):
         success: bool
@@ -94,7 +97,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
             500: error_response
         },
     )
-    def get_weather_history(city: str, limit: int) ->\
+    def get_weather_history(city: str, limit: int) -> \
             Union[HistoryResponse, ErrorResponse]:
         try:
             history = weather_repository.get_weather_history(city, limit)
@@ -149,7 +152,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
 
     @app.post(
         "/user/successful_login",
-        response_model=EmptyResponse,
+        response_model=SuccessfulLoginResponse,
         responses={
             403: forbidden_response,
             404: not_found_response,
@@ -158,6 +161,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
     )
     def user_successful_login(token: str, telegram_id: int,
                               authorization_token: str):
+        print(authorization_token, telegram_service_authorization_token)
         if authorization_token != telegram_service_authorization_token:
             return JSONResponse(
                 status_code=403,
@@ -168,7 +172,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
             )
 
         try:
-            callback_url = user_login_repository.delete_user_login()
+            callback_url = user_login_repository.delete_user_login(token)
             if callback_url is None:
                 return JSONResponse(
                     status_code=404,
@@ -198,27 +202,13 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                 }
             )
 
-        try:
-            requests.get(
-                callback_url,
-                params={
-                    "token": token,
-                    "telegram_id": telegram_id,
-                    "authorization_token": authorization_token
-                }
-            )
-        except Exception as e:
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "success": False,
-                    "error": f"Bad response from {callback_url}: {e}"
-                }
-            )
-
-        return {
-            "success": True
+        response = {
+            "success": True,
+            "callback_url": f"{callback_url}?token={token}&telegram_id={telegram_id}&authorization_token={authorization_token}",
         }
+        print(response)
+
+        return response
 
     @app.get(
         "/user/telegram_id",
@@ -253,24 +243,5 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                 "error": f"Authorization token {authorization_token} not found"
             }
         )
-
-    # Notifications
-
-    @app.websocket("/ws/notify")
-    async def websocket_endpoint(websocket: WebSocket):
-        await websocket.accept()
-        clients.append(websocket)
-        print("client attached")
-        try:
-            while True:
-                await websocket.receive_text()
-        except Exception:
-            clients.remove(websocket)
-
-    @app.post("/notification-test")
-    async def notification_test():
-        print("clients: " + str(len(clients)))
-        for client in clients:
-            await send_notification(client, "TEST NOTIFICATION")
 
     return app
