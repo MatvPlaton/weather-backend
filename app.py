@@ -118,7 +118,7 @@ def find_user(user_repository, token) -> Union[User, JSONResponse]:
                 "error": "Bad token"
             }
         )
-    
+
     return user
 
 
@@ -163,7 +163,11 @@ def add_get_weather_route(
                 )
         except Exception as e:
             return JSONResponse(
-                status_code=500, content={"success": False, "error": msg}
+                status_code=500,
+                content={
+                    "success": False,
+                    "error": "Bad response from WeatherApi: {e}"
+                }
             )
 
 
