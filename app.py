@@ -18,6 +18,7 @@ class WeatherResponse(BaseModel):
     pressure: int
     humidity: int
 
+
 class WeatherEntity(BaseModel):
     time: float
     temperature: float
@@ -25,20 +26,25 @@ class WeatherEntity(BaseModel):
     pressure: int
     humidity: int
 
+
 class HistoryResponse(BaseModel):
     success: bool
     history: List[WeatherEntity]
+
 
 class UserResponse(BaseModel):
     success: bool
     telegram_id: int
 
+
 class SuccessfulLoginResponse(BaseModel):
     success: bool
     callback_url: str
 
+
 class EmptyResponse(BaseModel):
     success: bool
+
 
 class ErrorResponse(BaseModel):
     success: bool
@@ -112,6 +118,7 @@ def find_user(user_repository, token) -> Union[User, JSONResponse]:
                 "error": "Bad token"
             }
         )
+
 
 # Routes
 # - Weather
@@ -200,6 +207,7 @@ def add_get_weather_history_route(
                 }
             )
 
+
 # - User
 
 def add_user_login_route(
@@ -227,6 +235,7 @@ def add_user_login_route(
                     "error": f"Bad response from UserLoginRepository: {e}"
                 }
             )
+
 
 def add_user_successful_login_route(
     app: FastAPI,
