@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime
 from threading import RLock
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from domain import WeatherRepository, WeatherState, User, UserRepository
 
@@ -22,23 +22,37 @@ class SqliteWeatherRepository(WeatherRepository):
                 feels_like REAL,
                 pressure INT,
                 humidity INT,
+                telegram_id INT,
                 PRIMARY KEY (time, city)
             )
             """
         )
         self.connection.commit()
 
-    def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
+    def get_weather_history(self, limit: int,
+                            city_or_user: Union[str, User]) -> \
+            List[WeatherState]:
         with self.lock:
             result = self.cursor.execute(
-                """
-                    SELECT time, temperature, feels_like, pressure, humidity
+                f"""
+                    SELECT time, city, temperature, feels_like, pressure,
+                           humidity
                     FROM weather
-                    WHERE city = ?
+                    WHERE {
+                        "telegram_id"
+                        if isinstance(city_or_user, User) else
+                        "city"
+                    }
+                    = ?
                     ORDER BY time DESC
                     LIMIT ?
                 """,
-                (city, limit),
+                (
+                    city_or_user.telegram_id
+                    if isinstance(city_or_user, User) else
+                    city_or_user,
+                    limit
+                ),
             )
 
             states = []
@@ -46,23 +60,24 @@ class SqliteWeatherRepository(WeatherRepository):
                 states.append(
                     WeatherState(
                         datetime.fromtimestamp(row[0] / 1000),
-                        city,
                         row[1],
                         row[2],
                         row[3],
                         row[4],
+                        row[5],
                     )
                 )
 
             return states
 
-    def save_weather(self, weather_state: WeatherState):
+    def save_weather(self, weather_state: WeatherState, user: User):
         with self.lock:
             self.cursor.execute(
                 """
                     INSERT INTO weather(time, city, temperature,
-                                        feels_like, pressure, humidity)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                                        feels_like, pressure, humidity,
+                                        telegram_id)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     round(weather_state.time.timestamp() * 1000),
@@ -71,6 +86,7 @@ class SqliteWeatherRepository(WeatherRepository):
                     weather_state.feels_like,
                     weather_state.pressure,
                     weather_state.humidity,
+                    user.telegram_id
                 ),
             )
             self.connection.commit()

@@ -46,18 +46,21 @@ class User:
 class WeatherRepository(ABC):
 
     @abstractmethod
-    def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
+    def get_weather_history(self, limit: int,
+                            city_or_user: Union[str, User]) -> \
+            List[WeatherState]:
         pass
 
     @abstractmethod
-    def save_weather(self, weather_state: WeatherState):
+    def save_weather(self, weather_state: WeatherState, user: User):
         pass
 
 
 class WeatherApi(ABC):
 
     @abstractmethod
-    def get_weather(self, city: str) -> Union[WeatherState, ApiError]:
+    def get_weather(self, city: str, user: User) -> \
+            Union[WeatherState, ApiError]:
         pass
 
 

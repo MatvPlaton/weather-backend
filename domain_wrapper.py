@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Union
 
-from domain import ApiError, WeatherApi, WeatherRepository, WeatherState
+from domain import ApiError, WeatherApi, WeatherRepository, WeatherState, User
 
 
 class WeatherApiWithRepository(WeatherApi):
@@ -10,10 +10,11 @@ class WeatherApiWithRepository(WeatherApi):
         self.wrapped = wrapped
         self.repository = repository
 
-    def get_weather(self, city: str) -> Union[WeatherState, ApiError]:
-        weather = self.wrapped.get_weather(city)
+    def get_weather(self, city: str, user: User) -> \
+            Union[WeatherState, ApiError]:
+        weather = self.wrapped.get_weather(city, user)
         if isinstance(weather, WeatherState):
-            self.repository.save_weather(weather)
+            self.repository.save_weather(weather, user)
         return weather
 
 
@@ -24,7 +25,8 @@ class CachedWeatherApi(WeatherApi):
         self.cache_seconds = cache_seconds
         self.cache = {}
 
-    def get_weather(self, city: str) -> Union[WeatherState, ApiError]:
+    def get_weather(self, city: str, user: User) -> \
+            Union[WeatherState, ApiError]:
         current_time = round(datetime.now().timestamp())
 
         cached = self.cache.get(city)
@@ -33,7 +35,7 @@ class CachedWeatherApi(WeatherApi):
             if current_time <= expire_time:
                 return cached["entity"]
 
-        weather = self.wrapped.get_weather(city)
+        weather = self.wrapped.get_weather(city, user)
         if isinstance(weather, WeatherState):
             self.cache[city] = {
                 "expire_time": current_time + self.cache_seconds,

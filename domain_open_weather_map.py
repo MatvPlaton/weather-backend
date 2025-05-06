@@ -3,7 +3,7 @@ from typing import Tuple, Union
 
 import requests
 
-from domain import ApiError, WeatherApi, WeatherState
+from domain import ApiError, WeatherApi, WeatherState, User
 
 
 class OpenWeatherMapApi(WeatherApi):
@@ -12,7 +12,8 @@ class OpenWeatherMapApi(WeatherApi):
         self.token = token
         self.city_to_lat_lon = {}
 
-    def get_weather(self, city: str) -> Union[WeatherState, ApiError]:
+    def get_weather(self, city: str, user: User) -> \
+            Union[WeatherState, ApiError]:
         lat_lon = self.__get_lat_lon(city)
 
         try:
