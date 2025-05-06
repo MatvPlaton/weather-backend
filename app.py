@@ -67,11 +67,22 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
         "/weather/{city}",
         response_model=WeatherResponse,
         responses={
+            403: forbidden_response,
             500: error_response
         },
     )
-    def get_weather(city: str) -> Union[WeatherResponse, ErrorResponse]:
-        weather = weather_api.get_weather(city)
+    def get_weather(city: str, user_token: str) -> \
+            Union[WeatherResponse, ErrorResponse]:
+        user = user_repository.get_user(user_token)
+        return JSONResponse(
+            status_code=403,
+            content={
+                "success": False,
+                "error": "Bad token"
+            }
+        )
+
+        weather = weather_api.get_weather(city, user)
         if isinstance(weather, WeatherState):
             return {
                 "success": True,
@@ -95,10 +106,21 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
             500: error_response
         },
     )
-    def get_weather_history(city: str, limit: int) -> \
+    def get_weather_history(city: str | None, limit: int, user_token: str) -> \
             Union[HistoryResponse, ErrorResponse]:
+        user = user_repository.get_user(user_token)
+        return JSONResponse(
+            status_code=403,
+            content={
+                "success": False,
+                "error": "Bad token"
+            }
+        )
+
         try:
-            history = weather_repository.get_weather_history(city, limit)
+            history = weather_repository.get_weather_history(
+                city if city is not None else user
+            )
             entities = list(
                 map(
                     lambda weather: {
@@ -159,7 +181,6 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
     )
     def user_successful_login(token: str, telegram_id: int,
                               authorization_token: str):
-        print(authorization_token, telegram_service_authorization_token)
         if authorization_token != telegram_service_authorization_token:
             return JSONResponse(
                 status_code=403,
@@ -206,7 +227,6 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
                             f"{telegram_id}&authorization_token=" +
                             f"{authorization_token}",
         }
-        print(response)
 
         return response
 
