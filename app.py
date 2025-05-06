@@ -118,6 +118,8 @@ def find_user(user_repository, token) -> Union[User, JSONResponse]:
                 "error": "Bad token"
             }
         )
+    
+    return user
 
 
 # Routes
@@ -142,19 +144,24 @@ def add_get_weather_route(
         if isinstance(user, JSONResponse):
             return user
 
-        weather = weather_api.get_weather(city, user)
-        if isinstance(weather, WeatherState):
-            return {
-                "success": True,
-                "temperature": weather.temperature,
-                "feels_like": weather.feels_like,
-                "pressure": weather.pressure,
-                "humidity": weather.humidity,
-            }
-        else:
-            msg = "Bad response from WeatherAPI"
-            if isinstance(weather, ApiError):
-                msg += ": " + weather.message
+        try:
+            weather = weather_api.get_weather(city, user)
+            if isinstance(weather, WeatherState):
+                return {
+                    "success": True,
+                    "temperature": weather.temperature,
+                    "feels_like": weather.feels_like,
+                    "pressure": weather.pressure,
+                    "humidity": weather.humidity,
+                }
+            else:
+                msg = "Bad response from WeatherAPI"
+                if isinstance(weather, ApiError):
+                    msg += ": " + weather.message
+                return JSONResponse(
+                    status_code=500, content={"success": False, "error": msg}
+                )
+        except Exception as e:
             return JSONResponse(
                 status_code=500, content={"success": False, "error": msg}
             )
