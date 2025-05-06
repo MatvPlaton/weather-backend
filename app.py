@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import uuid
 
 from domain import ApiError, WeatherApi, WeatherState, WeatherRepository, \
-    UserRepository, UserLoginRepository
+    UserRepository, UserLoginRepository, User
 
 
 def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
@@ -61,10 +61,31 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
         "description": "Internal Server Error"
     }
 
+    def find_user(token) -> Union[User, JSONResponse]:
+        try:
+            user = user_repository.get_user(token)
+        except Exception as e:
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False,
+                    "error": f"Bad response from UserRepository: {e}"
+                }
+            )
+        
+        if user is None:
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "success": False,
+                    "error": "Bad token"
+                }
+            )
+
     # Weather
 
     @app.get(
-        "/weather/{city}",
+        "/weather",
         response_model=WeatherResponse,
         responses={
             403: forbidden_response,
@@ -73,14 +94,9 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
     )
     def get_weather(city: str, user_token: str) -> \
             Union[WeatherResponse, ErrorResponse]:
-        user = user_repository.get_user(user_token)
-        return JSONResponse(
-            status_code=403,
-            content={
-                "success": False,
-                "error": "Bad token"
-            }
-        )
+        user = find_user(user_token)
+        if isinstance(user, JSONResponse):
+            return user
 
         weather = weather_api.get_weather(city, user)
         if isinstance(weather, WeatherState):
@@ -100,7 +116,7 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
             )
 
     @app.get(
-        "/weather/history/{city}",
+        "/weather/history",
         response_model=HistoryResponse,
         responses={
             500: error_response
@@ -108,14 +124,9 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
     )
     def get_weather_history(city: str | None, limit: int, user_token: str) -> \
             Union[HistoryResponse, ErrorResponse]:
-        user = user_repository.get_user(user_token)
-        return JSONResponse(
-            status_code=403,
-            content={
-                "success": False,
-                "error": "Bad token"
-            }
-        )
+        user = find_user(user_token)
+        if isinstance(user, JSONResponse):
+            return user
 
         try:
             history = weather_repository.get_weather_history(
@@ -234,34 +245,18 @@ def create_app(weather_api: WeatherApi, weather_repository: WeatherRepository,
         "/user/telegram_id",
         response_model=UserResponse,
         responses={
-            404: not_found_response,
+            403: forbidden_response,
             500: error_response,
         },
     )
     def user_telegram_id(authorization_token: str):
-        try:
-            user = user_repository.get_user(authorization_token)
-        except Exception as e:
-            return JSONResponse(
-                status_code=500,
-                content={
-                    "success": False,
-                    "error": f"Bad response from UserRepository: {e}"
-                }
-            )
+        user = find_user(user_token)
+        if isinstance(user, JSONResponse):
+            return user
 
-        if user is not None:
-            return {
-                "success": True,
-                "telegram_id": user.telegram_id
-            }
-
-        return JSONResponse(
-            status_code=404,
-            content={
-                "success": False,
-                "error": f"Authorization token {authorization_token} not found"
-            }
-        )
+        return {
+            "success": True,
+            "telegram_id": user.telegram_id
+        }
 
     return app

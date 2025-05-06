@@ -5,9 +5,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import create_app
-from domain import (ApiError, WeatherApi,
-                    WeatherRepository, WeatherState)
-
+from domain import ApiError, WeatherApi, WeatherRepository, WeatherState, \
+    UserRepository, User
 
 @pytest.fixture
 def mock_weather_api_success():
@@ -30,11 +29,23 @@ def mock_weather_api_error():
     return mock
 
 
-def test_get_weather_success(mock_weather_api_success):
-    app = create_app(mock_weather_api_success, None, None, None, "")
+@pytest.fixture
+def mock_user_repository():
+    mock = MagicMock(spec=UserRepository)
+    mock.get_user.side_effect = lambda token: User(1, token)
+    return mock
+
+
+def test_get_weather_success(mock_weather_api_success, mock_user_repository):
+    app = create_app(
+        mock_weather_api_success, None, mock_user_repository, None, ""
+    )
     client = TestClient(app)
 
-    response = client.get("/weather/London")
+    response = client.get("/weather", params={
+        "user_token": "",
+        "city": "London"
+    })
     assert response.status_code == 200
 
     data = response.json()
@@ -45,11 +56,16 @@ def test_get_weather_success(mock_weather_api_success):
     assert data["humidity"] == 65
 
 
-def test_get_weather_error(mock_weather_api_error):
-    app = create_app(mock_weather_api_error, None, None, None, "")
+def test_get_weather_error(mock_weather_api_error, mock_user_repository):
+    app = create_app(
+        mock_weather_api_error, None, mock_user_repository, None, ""
+    )
     client = TestClient(app)
 
-    response = client.get("/weather/London")
+    response = client.get("/weather", params={
+        "user_token": "",
+        "city": "London"
+    })
     assert response.status_code == 500
 
     data = response.json()
@@ -64,11 +80,17 @@ def mock_weather_api_invalid():
     return mock
 
 
-def test_get_weather_invalid_response(mock_weather_api_invalid):
-    app = create_app(mock_weather_api_invalid, None, None, None, "")
+def test_get_weather_invalid_response(mock_weather_api_invalid,
+                                      mock_user_repository):
+    app = create_app(
+        mock_weather_api_invalid, None, mock_user_repository, None, ""
+    )
     client = TestClient(app)
 
-    response = client.get("/weather/London")
+    response = client.get("/weather", params={
+        "user_token": "",
+        "city": "London"
+    })
     assert response.status_code == 500
 
     data = response.json()
@@ -82,7 +104,8 @@ def mock_weather_repository():
     return mock
 
 
-def test_get_weather_history_success(mock_weather_repository):
+def test_get_weather_history_success(mock_weather_repository,
+                                     mock_user_repository):
     mock_weather_repository.get_weather_history.return_value = [
         WeatherState(
             time=datetime(2024, 1, 1),
@@ -93,9 +116,15 @@ def test_get_weather_history_success(mock_weather_repository):
             humidity=70
         )
     ]
-    app = create_app(None, mock_weather_repository, None, None, "")
+    app = create_app(
+        None, mock_weather_repository, mock_user_repository, None, ""
+    )
     client = TestClient(app)
-    response = client.get("/weather/history/London", params={"limit": 1})
+    response = client.get("/weather/history", params={
+        "user_token": "",
+        "city": "London",
+        "limit": 1,
+    })
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -106,12 +135,19 @@ def test_get_weather_history_success(mock_weather_repository):
     assert data["history"][0]["humidity"] == 70
 
 
-def test_get_weather_history_failure(mock_weather_repository):
+def test_get_weather_history_failure(mock_weather_repository,
+                                     mock_user_repository):
     mock_weather_repository.get_weather_history.side_effect = \
         Exception("Database error")
-    app = create_app(None, mock_weather_repository, None, None, "")
+    app = create_app(
+        None, mock_weather_repository, mock_user_repository, None, ""
+    )
     client = TestClient(app)
-    response = client.get("/weather/history/London", params={"limit": 1})
+    response = client.get("/weather/history", params={
+        "user_token": "",
+        "city": "London",
+        "limit": 1,
+    })
 
     assert response.status_code == 500
     data = response.json()
