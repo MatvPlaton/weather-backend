@@ -9,6 +9,9 @@ docker-compose.yml
 .env.example
 database.db
 __pycache__
+.pytest_cache
+tests/__pycache__
 *.pyc
 *.pyo
 *.pyd
+.coverage

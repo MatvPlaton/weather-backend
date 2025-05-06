@@ -25,7 +25,7 @@ class SqliteWeatherRepository(WeatherRepository):
                 telegram_id INT,
                 PRIMARY KEY (time, city)
             )
-        """
+            """
         )
         self.connection.commit()
 

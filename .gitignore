@@ -5,3 +5,6 @@ __pycache__/*
 .idea/*
 .env
 .DS_Store
+.pytest_cache/*
+tests/__pycache__/*
+.coverage
