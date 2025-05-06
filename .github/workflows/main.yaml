@@ -18,3 +18,5 @@ jobs:
         run: poetry install --with dev
       - name: Run pytest
         run: poetry run pytest tests/*.py --cov=. --cov-branch --cov-fail-under=60
+      - name: Run flake8
+        run: poetry run flake8

@@ -8,6 +8,7 @@ from app import create_app
 from domain import ApiError, WeatherApi, WeatherRepository, WeatherState, \
     UserRepository, User
 
+
 @pytest.fixture
 def mock_weather_api_success():
     mock = MagicMock(spec=WeatherApi)
