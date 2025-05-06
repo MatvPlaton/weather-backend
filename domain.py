@@ -46,10 +46,6 @@ class User:
 class WeatherRepository(ABC):
 
     @abstractmethod
-    def get_weather(self, time: datetime, city: str) -> Optional[WeatherState]:
-        pass
-
-    @abstractmethod
     def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
         pass
 

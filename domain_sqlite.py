@@ -24,32 +24,9 @@ class SqliteWeatherRepository(WeatherRepository):
                 humidity INT,
                 PRIMARY KEY (time, city)
             )
-        """
+            """
         )
         self.connection.commit()
-
-    def get_weather(self, time: datetime, city: str) -> Optional[WeatherState]:
-        with self.lock:
-            result = self.cursor.execute(
-                """
-                    SELECT temperature, feels_like, pressure, humidity
-                    FROM weather
-                    WHERE time = ? AND city = ?
-                """,
-                (round(time.timestamp() * 1000), city),
-            ).fetchone()
-
-            if result is not None:
-                return WeatherState(
-                    time,
-                    city,
-                    result["temperature"],
-                    result["feels_like"],
-                    result["pressure"],
-                    result["humidity"],
-                )
-
-            return None
 
     def get_weather_history(self, city: str, limit: int) -> List[WeatherState]:
         with self.lock:

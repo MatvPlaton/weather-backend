@@ -1,0 +1,20 @@
+name: weather-backend
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.3'
+      - name: Run image
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: '2.1.1'
+      - name: Install dependencies
+        run: poetry install --with dev
+      - name: Run pytest
+        run: poetry run pytest tests/*.py --cov=. --cov-branch --cov-fail-under=60
