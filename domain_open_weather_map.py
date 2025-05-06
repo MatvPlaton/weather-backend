@@ -27,6 +27,7 @@ class OpenWeatherMapApi(WeatherApi):
                     "appid": self.token,
                     "units": "metric",
                 },
+                timeout=3,
             )
         except requests.exceptions.RequestException as e:
             return ApiError(str(e))
@@ -50,6 +51,7 @@ class OpenWeatherMapApi(WeatherApi):
             response = requests.get(
                 "http://api.openweathermap.org/geo/1.0/direct",
                 params={"q": city, "limit": 1, "appid": self.token},
+                timeout=3,
             )
         except requests.exceptions.RequestException as e:
             return ApiError(str(e))

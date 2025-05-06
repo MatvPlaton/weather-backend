@@ -33,27 +33,28 @@ class SqliteWeatherRepository(WeatherRepository):
                             city_or_user: Union[str, User]) -> \
             List[WeatherState]:
         with self.lock:
-            result = self.cursor.execute(
-                f"""
+            if isinstance(city_or_user, User):
+                sql = """
                     SELECT time, city, temperature, feels_like, pressure,
                            humidity
                     FROM weather
-                    WHERE {
-                        "telegram_id"
-                        if isinstance(city_or_user, User) else
-                        "city"
-                    }
-                    = ?
+                    WHERE telegram_id = ?
                     ORDER BY time DESC
                     LIMIT ?
-                """,
-                (
-                    city_or_user.telegram_id
-                    if isinstance(city_or_user, User) else
-                    city_or_user,
-                    limit
-                ),
-            )
+                """
+                args = (city_or_user.telegram_id, limit)
+            else:
+                sql = """
+                    SELECT time, city, temperature, feels_like, pressure,
+                           humidity
+                    FROM weather
+                    WHERE city = ?
+                    ORDER BY time DESC
+                    LIMIT ?
+                """
+                args = (city_or_user, limit)
+
+            result = self.cursor.execute(sql, args)
 
             states = []
             for row in result:
@@ -115,7 +116,7 @@ class SqliteUserRepository(UserRepository):
             result = self.cursor.execute(
                 """
                     SELECT telegram_id
-                    FROM user
+                    FROM users
                     WHERE token = ?
                 """,
                 (token),
