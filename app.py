@@ -166,7 +166,7 @@ def add_get_weather_route(
                 status_code=500,
                 content={
                     "success": False,
-                    "error": "Bad response from WeatherApi: {e}"
+                    "error": f"Bad response from WeatherApi: {e}"
                 }
             )
 
