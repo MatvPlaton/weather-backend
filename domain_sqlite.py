@@ -119,7 +119,7 @@ class SqliteUserRepository(UserRepository):
                     FROM users
                     WHERE token = ?
                 """,
-                (token),
+                (token,),
             ).fetchone()
 
             if result is not None:
