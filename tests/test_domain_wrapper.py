@@ -5,6 +5,7 @@ from datetime import datetime
 from domain import WeatherApi, WeatherRepository, WeatherState
 from domain_wrapper import WeatherApiWithRepository, CachedWeatherApi
 
+
 @pytest.fixture
 def mock_weather_api():
     mock = MagicMock(spec=WeatherApi)
@@ -29,8 +30,12 @@ def mock_weather_repository():
     return mock
 
 
-def test_weather_api_with_repository(mock_weather_api, mock_weather_repository):
-    wrapped = WeatherApiWithRepository(mock_weather_api, mock_weather_repository)
+def test_weather_api_with_repository(mock_weather_api,
+                                     mock_weather_repository):
+    wrapped = WeatherApiWithRepository(
+        mock_weather_api,
+        mock_weather_repository
+    )
 
     weather = wrapped.get_weather("London")
     mock_weather_repository.save_weather.assert_called_once_with(weather)
@@ -45,7 +50,7 @@ def test_cached_weather_api(mock_weather_api):
 
     weather3 = wrapped.get_weather("Moscow")
     assert weather1.time != weather3.time
-    
+
     wrapped.cache.clear()
     weather4 = wrapped.get_weather("London")
     assert weather1.time != weather4.time
