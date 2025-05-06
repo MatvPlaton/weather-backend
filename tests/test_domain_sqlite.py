@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import os
 import contextlib
 
-from domain import WeatherState
+from domain import WeatherState, User
 from domain_sqlite import SqliteWeatherRepository
 
 
@@ -48,7 +48,7 @@ def test_weather_repository_save_weather(weather_repository):
     ).fetchone()[0]
     assert count == 0
 
-    weather_repository.save_weather(weather)
+    weather_repository.save_weather(weather, User(1, ""))
 
     count = weather_repository.cursor.execute(
         "SELECT COUNT(*) FROM weather"
@@ -79,6 +79,7 @@ def test_weather_repository_get_weather_history(weather_repository):
         pressure=1015,
         humidity=65
     )
+    user1 = User(1, "")
 
     weather2 = WeatherState(
         time=datetime.now(),
@@ -88,18 +89,23 @@ def test_weather_repository_get_weather_history(weather_repository):
         pressure=1000,
         humidity=60
     )
+    user2 = User(2, "")
 
-    weather_repository.save_weather(weather1)
-    weather_repository.save_weather(weather2)
+    weather_repository.save_weather(weather1, user1)
+    weather_repository.save_weather(weather2, user2)
 
-    history = weather_repository.get_weather_history("London", 5)
+    history = weather_repository.get_weather_history(5, "London")
     assert len(history) == 2
     assert_weather_eq(history[0], weather2)
     assert_weather_eq(history[1], weather1)
 
-    history = weather_repository.get_weather_history("London", 1)
+    history = weather_repository.get_weather_history(1, "London")
     assert len(history) == 1
     assert_weather_eq(history[0], weather2)
 
-    history = weather_repository.get_weather_history("Moscow", 1)
+    history = weather_repository.get_weather_history(1, "Moscow")
     assert len(history) == 0
+
+    history = weather_repository.get_weather_history(1, user1)
+    assert len(history) == 1
+    assert_weather_eq(history[0], weather1)
