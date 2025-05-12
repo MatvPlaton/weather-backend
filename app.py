@@ -40,7 +40,7 @@ class UserResponse(BaseModel):
 class SuccessfulLoginResponse(BaseModel):
     success: bool
     callback_url: str
-
+    auth_token: str
 
 class EmptyResponse(BaseModel):
     success: bool
@@ -308,6 +308,7 @@ def add_user_successful_login_route(
 
         response = {
             "success": True,
+            "auth_token": f"{authorization_token}",
             "callback_url": f"{callback_url}?token={token}&telegram_id=" +
                             f"{telegram_id}&authorization_token=" +
                             f"{authorization_token}",
@@ -330,7 +331,7 @@ def add_user_telegram_id_route(
         },
     )
     def user_telegram_id(user_token: str):
-        user = find_user(user_token)
+        user = find_user(user_repository, user_token)
         if isinstance(user, JSONResponse):
             return user
 
